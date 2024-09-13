@@ -1,3 +1,6 @@
+// RETIRAR MIDDLEWARE, ACREDITO NÃO SER NECESSARIO (CASO SEJA, MANTER)
+
+
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 

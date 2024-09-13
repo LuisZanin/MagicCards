@@ -13,6 +13,7 @@ import { CardModule } from './cards/cards.module';
     CardModule],
 })
 export class AppModule {
+  //CASO RETIRAR MIDDLEWARE, RETIRAR CONSUMER E CONFIGURE.
   configure(consumer: MiddlewareConsumer){
     consumer.apply(ResLogger)
     .forRoutes('*');

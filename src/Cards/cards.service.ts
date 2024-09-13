@@ -1,6 +1,10 @@
 import axios, { AxiosResponse } from "axios";
 import { CreateCardDto } from "./dto/create-cards.dto";
 
+// ADICIONAR MAIS MÉTODOS, COMO POR EXEMPLO IMPORTAÇÃO DE DECKS E OUTROS. 
+// VERIFICAR TERRENOS, NÃO PENSEI NA HORA FAZER.
+// VERIFICAR MONSTROS E OUTROS CARDS, NÃO PENSEI NA HORA FAZER.
+
 export class CardService {
 
     async create(): Promise<CreateCardDto> {
@@ -24,6 +28,8 @@ export class CardService {
         return commanderCards[Math.floor(Math.random() * commanderCards.length)];
       }
     
+
+      //ADICIONAR VALIDAÇÃO DE CARDS REPETIDOS
       private async getOtherCards(colors: string[]): Promise<any[]> {
         const colorQuery = colors.join(',');
         const response: AxiosResponse = await axios.get(

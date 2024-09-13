@@ -4,6 +4,9 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserAlreadyExistsException } from './exceptions/user-already-exists.exception';
 
+// ANALISAR, CASO NECESSARIO, ADICIONAR OU REMOVER ROTAS
+
+
 @Controller('user')
 export class UsersController {
     constructor(private readonly userService: UsersService){}

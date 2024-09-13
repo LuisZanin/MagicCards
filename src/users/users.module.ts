@@ -5,6 +5,8 @@ import { User, UserShema } from './schemas/users.schema';
 import { UsersController } from './users.controller';
 import { hashPassword } from './middleware/users.middleware';
 
+//ANALISAR, NÃO SEI DIREITO O QUE FAZ
+
 @Module({
   imports: [MongooseModule.forFeature([{name: User.name, schema: UserShema}])],
   providers: [UsersService],

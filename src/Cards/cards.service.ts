@@ -40,10 +40,10 @@ export class CardService {
 
     private async getCommander(): Promise<any> {
         const response: AxiosResponse = await axios.get(
-          'https://api.magicthegathering.io/v1/cards?supertypes=legendary',
+          'https://api.scryfall.com/cards/random?q=is%3Acommander',
         );
-        const commanderCards = response.data.cards;
-        return commanderCards[Math.floor(Math.random() * commanderCards.length)];
+        const commanderCards = response.data;
+        return commanderCards;
       }
     
       private async getOtherCards(colors: string[]): Promise<any[]> {
@@ -60,14 +60,33 @@ export class CardService {
         return card.name;
       }
     
-      private getRandomizedCards(cards: any[], count: number): any[] {
-        const randomizedCards = [];
-        for (let i = 0; i < count; i++) {
-          const randomCard = cards[Math.floor(Math.random() * cards.length)];
-          randomizedCards.push(randomCard);
+      private async getRandomizedCards(cards: any[], count: number): Promise<any[]> {
+        if (cards.length < count) {
+            throw new Error("Not enough unique cards available to fulfill the request");
         }
-        return randomizedCards;
-      }
-
+    
+        const uniqueCards = new Set();
+        const shuffledCards = this.shuffleArray(cards);
+    
+        for (const card of shuffledCards) {
+            if (uniqueCards.size >= count) {
+                break;
+            }
+            const cardName = this.getCardName(card);
+            if (!uniqueCards.has(cardName)) {
+                uniqueCards.add(cardName);
+            }
+        }
+    
+        return Array.from(uniqueCards).map(name => cards.find(card => this.getCardName(card) === name));
+    }
+    
+    private shuffleArray(array: any[]): any[] {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
 }
 

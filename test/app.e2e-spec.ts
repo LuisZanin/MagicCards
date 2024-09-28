@@ -91,14 +91,14 @@ describe('AppController (e2e)', () => {
     console.log(`Average Response Time without Cache: ${averageTimeWithoutCache.toFixed(2)} ms`);
   });
 
-  // Teste de performance com cache
+  // Teste de performance 
   it('should measure performance with cache', async () => {
     const requests = 100; // Número de requisições para testar
     const times: number[] = [];
 
     for (let i = 0; i < requests; i++) {
       const start = performance.now();
-      await request(app.getHttpServer()).get('/cards?cache=true'); // Endpoint que usa cache
+      await request(app.getHttpServer()).get('/cards?cache=true'); // Endpoint
       const end = performance.now();
       times.push(end - start);
     }

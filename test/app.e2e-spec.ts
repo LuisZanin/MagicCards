@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { beforeEach, describe, it, afterAll } from '@jest/globals'; 
+import { performance } from 'perf_hooks';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -72,5 +73,40 @@ describe('AppController (e2e)', () => {
     await request(app.getHttpServer())
       .delete(`/cards/${cardId}`)
       .expect(200); // Espera que o status seja 200 (OK)
+  });
+
+  // Teste de performance sem cache
+  it('should measure performance without cache', async () => {
+    const requests = 100; // Número de requisições para testar
+    const times: number[] = [];
+
+    for (let i = 0; i < requests; i++) {
+      const start = performance.now();
+      await request(app.getHttpServer()).get('/cards'); 
+      const end = performance.now();
+      times.push(end - start);
+    }
+
+    const averageTimeWithoutCache = times.reduce((a, b) => a + b, 0) / times.length;
+    console.log(`Average Response Time without Cache: ${averageTimeWithoutCache.toFixed(2)} ms`);
+  });
+
+  // Teste de performance com cache
+  it('should measure performance with cache', async () => {
+    const requests = 100; // Número de requisições para testar
+    const times: number[] = [];
+
+    for (let i = 0; i < requests; i++) {
+      const start = performance.now();
+      await request(app.getHttpServer()).get('/cards?cache=true'); // Endpoint que usa cache
+      const end = performance.now();
+      times.push(end - start);
+    }
+
+    const averageTimeWithCache = times.reduce((a, b) => a + b, 0) / times.length;
+    console.log(`Average Response Time with Cache: ${averageTimeWithCache.toFixed(2)} ms`);
+
+    const ratio = averageTimeWithCache / averageTimeWithCache;
+    console.log(`Cache improves performance by a factor of: ${ratio.toFixed(2)}x`);
   });
 });

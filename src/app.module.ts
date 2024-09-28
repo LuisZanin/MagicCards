@@ -5,9 +5,9 @@ import { UsersModule } from './users/users.module';
 import { MiddlewareConsumer } from '@nestjs/common';
 import { ResLogger } from './middleware';
 import { CardModule } from './cards/cards.module';
-
+//mongodb://localhost/magic
 @Module({
-  imports: [MongooseModule.forRoot('mongodb://localhost/magic'), 
+  imports: [MongooseModule.forRoot('mongodb://127.0.0.1:27017/nest'), 
     AuthModule, 
     UsersModule, 
     CardModule],

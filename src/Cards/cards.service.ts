@@ -1,3 +1,7 @@
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { Cards, CardDocument } from "./cards.schema";
 import axios, { AxiosResponse } from "axios";
 import { CreateCardDto } from "./dto/create-cards.dto";
 
@@ -5,20 +9,28 @@ import { CreateCardDto } from "./dto/create-cards.dto";
 // VERIFICAR TERRENOS, NÃO PENSEI NA HORA FAZER.
 // VERIFICAR MONSTROS E OUTROS CARDS, NÃO PENSEI NA HORA FAZER.
 
+@Injectable()
 export class CardService {
+  constructor(@InjectModel(Cards.name) private cardModel: Model<CardDocument>) {}
 
-    async create(): Promise<CreateCardDto> {
-        const Commander = await this.getCommander();
-        const commanderName = this.getCardName(Commander);
-        const otherCards = await this.getOtherCards(Commander.colors || []);
-        const cardNames = otherCards.map(this.getCardName);
-    
+  async create(): Promise<CreateCardDto> {
+    const Commander = await this.getCommander();
+    const commanderName = this.getCardName(Commander);
+    const otherCards = await this.getOtherCards(Commander.colors || []);
+    const cardNames = otherCards.map(this.getCardName);
+
+    // ADIÇÃO MAMI PARA SALVAR O DECK NO MONGO, ALTERADO IMPORTS VERIFICAR QUEM USAVA
+    const newDeck = new this.cardModel({
+      Commander: commanderName,
+      card: cardNames,
+    });
+    await newDeck.save();
 
     return {
-        Commander: commanderName,
-        card: cardNames,
-      };
-    }
+      Commander: commanderName,
+      card: cardNames,
+    };
+  }
 
     private async getCommander(): Promise<any> {
         const response: AxiosResponse = await axios.get(
@@ -52,4 +64,6 @@ export class CardService {
         }
         return randomizedCards;
       }
+
 }
+

@@ -1,15 +1,19 @@
-import { Controller, Get } from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { CardService } from "./cards.service";
 import { CreateCardDto } from "./dto/create-cards.dto";
-
-//ADICIONAR MAIS ROTAS
 
 @Controller('card')
 export class CardController {
     constructor(private readonly cardService: CardService) {}
 
-    @Get('create')
-    async createCards(): Promise<CreateCardDto> {
-        return this.cardService.create();
+    @Post('create')
+    async createCards(@Body() CreateCardDto: CreateCardDto): Promise<CreateCardDto> {
+        const { deckName } = CreateCardDto;
+        return this.cardService.create(deckName);
+    }
+
+    @Get('viewAllDecks')
+    async viewAllDecks(): Promise<CreateCardDto[]> {
+        return this.cardService.viewAllDecks();
     }
 }

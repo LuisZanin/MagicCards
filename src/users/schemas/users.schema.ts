@@ -18,7 +18,6 @@ export class User{
 
     @Prop()
     email: string;
-
 }
 
 export const UserShema = SchemaFactory.createForClass(User);

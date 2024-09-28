@@ -2,7 +2,10 @@ import { IsArray, IsString } from "class-validator";
 
 export class CreateCardDto {
     @IsString()
-    Commander: string;
+    deckName: string;
+
+    @IsString()
+    commander: string;
 
     @IsArray()
     card: string[];

@@ -5,32 +5,38 @@ import { Cards, CardDocument } from "./cards.schema";
 import axios, { AxiosResponse } from "axios";
 import { CreateCardDto } from "./dto/create-cards.dto";
 
-// ADICIONAR MAIS MÉTODOS, COMO POR EXEMPLO IMPORTAÇÃO DE DECKS E OUTROS. 
-// VERIFICAR TERRENOS, NÃO PENSEI NA HORA FAZER.
-// VERIFICAR MONSTROS E OUTROS CARDS, NÃO PENSEI NA HORA FAZER.
-
 @Injectable()
 export class CardService {
   constructor(@InjectModel(Cards.name) private cardModel: Model<CardDocument>) {}
 
-  async create(): Promise<CreateCardDto> {
-    const Commander = await this.getCommander();
-    const commanderName = this.getCardName(Commander);
-    const otherCards = await this.getOtherCards(Commander.colors || []);
+  async create(deckName: string): Promise<CreateCardDto> {
+    const commander = await this.getCommander();
+    const commanderName = this.getCardName(commander);
+    const otherCards = await this.getOtherCards(commander.colors || []);
     const cardNames = otherCards.map(this.getCardName);
 
-    // ADIÇÃO MAMI PARA SALVAR O DECK NO MONGO, ALTERADO IMPORTS VERIFICAR QUEM USAVA
     const newDeck = new this.cardModel({
-      Commander: commanderName,
+      deckName: deckName,
+      commander: commanderName,
       card: cardNames,
     });
     await newDeck.save();
 
     return {
-      Commander: commanderName,
+      deckName: deckName,
+      commander: commanderName,
       card: cardNames,
     };
   }
+
+  async viewAllDecks(): Promise<CreateCardDto[]> {
+      const decks = await this.cardModel.find().exec();
+      return decks.map((deck) => ({
+        deckName: deck.deckName,
+        commander: deck.commander,
+        card: deck.card,
+      }));
+    }
 
     private async getCommander(): Promise<any> {
         const response: AxiosResponse = await axios.get(
@@ -40,8 +46,6 @@ export class CardService {
         return commanderCards[Math.floor(Math.random() * commanderCards.length)];
       }
     
-
-      //ADICIONAR VALIDAÇÃO DE CARDS REPETIDOS
       private async getOtherCards(colors: string[]): Promise<any[]> {
         const colorQuery = colors.join(',');
         const response: AxiosResponse = await axios.get(

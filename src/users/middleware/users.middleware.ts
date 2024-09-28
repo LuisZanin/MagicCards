@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as bcrypt from 'bcrypt';
 
-// Verificar criptografia (testar)
 
 const saltRounds = 10;
 

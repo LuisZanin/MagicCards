@@ -8,8 +8,6 @@ import {
   import { jwtConstants } from './constants'
   import { Request } from 'express';
   
-  //AQUI ESTÁ IGUAL A DOC DO NEST.
-
   @Injectable()
   export class AuthGuard implements CanActivate {
     constructor(private jwtService: JwtService) {}

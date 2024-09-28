@@ -28,7 +28,7 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  // Teste para criar um card
+
   it('/cards (POST)', async () => {
     const newCard = {
       name: 'Card Example',
@@ -39,22 +39,21 @@ describe('AppController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/cards')
       .send(newCard)
-      .expect(201); // Espera que o status seja 201 (Created)
+      .expect(201);
 
-    expect(response.body).toHaveProperty('_id'); // Verifica se o ID foi gerado
-    expect(response.body.name).toEqual(newCard.name); // Verifica se o nome está correto
+    expect(response.body).toHaveProperty('_id');
+    expect(response.body.name).toEqual(newCard.name);
   });
 
-  // Teste para listar cards
+
   it('/cards (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/cards')
-      .expect(200); // Espera que o status seja 200 (OK)
+      .expect(200); 
 
-    expect(Array.isArray(response.body)).toBe(true); // Verifica se a resposta é um array
+    expect(Array.isArray(response.body)).toBe(true);
   });
 
-  // Teste para excluir um card
   it('/cards/:id (DELETE)', async () => {
     const newCard = {
       name: 'Card to Delete',
@@ -67,10 +66,10 @@ describe('AppController (e2e)', () => {
       .send(newCard)
       .expect(201);
 
-    const cardId = createResponse.body._id; // Captura o ID do card criado
+    const cardId = createResponse.body._id;
 
     await request(app.getHttpServer())
       .delete(`/cards/${cardId}`)
-      .expect(200); // Espera que o status seja 200 (OK)
+      .expect(200);
   });
 });

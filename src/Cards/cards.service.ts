@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Cards, CardDocument } from "./cards.schema";
 import axios, { AxiosResponse } from "axios";
 import { CreateCardDto } from "./dto/create-cards.dto";
+import { Cards, CardDocument } from "./cards.schema";  
 
 @Injectable()
 export class CardService {
@@ -26,7 +26,7 @@ export class CardService {
       Commander: commanderName,
       card: cardNames,
     });
-    await newDeck.save();
+    await newDeck.save();  
 
     return {
       Commander: commanderName,
@@ -42,6 +42,7 @@ export class CardService {
     return commanderCards[Math.floor(Math.random() * commanderCards.length)];
   }
 
+  // Validação de cards repetidos
   private async getOtherCards(colors: string[]): Promise<any[]> {
     const colorQuery = colors.join(',');
     const response: AxiosResponse = await axios.get(
@@ -49,7 +50,7 @@ export class CardService {
     );
     const nonLegendaryCards = response.data.cards;
 
-    return this.getRandomizedCards(nonLegendaryCards, 99);
+    return this.getRandomizedCards(nonLegendaryCards, 99);  // Retorna os 99 cards
   }
 
   private getCardName(card: any): string {

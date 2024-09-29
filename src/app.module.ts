@@ -1,10 +1,11 @@
-import { Module, CacheModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MiddlewareConsumer } from '@nestjs/common';
 import { ResLogger } from './middleware';
 import { CardModule } from './Cards/cards.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -13,13 +14,12 @@ import { CardModule } from './Cards/cards.module';
     UsersModule,
     CardModule,
     CacheModule.register({
-      ttl: 60,  // Tempo de vida do cache
-      max: 100,  // Quantidade máxima de itens armazenados no cache
+      ttl: 60, 
+      max: 100,
     }),
   ],
 })
 export class AppModule {
-  //CASO RETIRAR MIDDLEWARE, RETIRAR CONSUMER E CONFIGURE.
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(ResLogger).forRoutes('*');
   }

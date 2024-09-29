@@ -7,8 +7,6 @@ import {
   import { JwtService } from '@nestjs/jwt';
   import { jwtConstants } from './constants'
   import { Request } from 'express';
-  
-  //AQUI ESTÁ IGUAL A DOC DO NEST.
 
   @Injectable()
   export class AuthGuard implements CanActivate {

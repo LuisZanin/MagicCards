@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [backgroundImage, setBackgroundImage] = useState('');
+
+  useEffect(() => {
+
+    const images = [
+      '1314053.jpg',
+      '1290838.jpg',
+      '1302423.jpg',
+      '1315735.jpg',
+      '1303446.jpg'
+    ];
+
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    setBackgroundImage(`/images/${randomImage}`);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,32 +32,53 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleSubmit} className="w-96 bg-gray-100 p-4 rounded shadow">
-        <h2 className="text-xl font-bold mb-4">Login</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-2 mb-4 border rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Senha"
-          className="w-full p-2 mb-4 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button className="bg-blue-500 text-white w-full p-2 rounded mb-4">Entrar</button>
+    <div className="login-container">
+      {/* Seção Esquerda */}
+      <div className="left-section">
+        <h2 className="text-4xl font-bold mb-6">Bem-vindo(a)</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <label className="block text-sm font-semibold mb-2" htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="Digite seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <p className="text-center">
+          <label className="block text-sm font-semibold mb-2" htmlFor="password">
+            Senha
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Digite sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <button type="submit">Entrar</button>
+        </form>
+
+        <p className="mt-4 text-gray-500">
           Não tem uma conta?{' '}
-          <Link to="/register" className="text-blue-500 underline">
-            Registrar-se
+          <Link to="/register" className="link">
+            Criar Conta
           </Link>
         </p>
-      </form>
+      </div>
+
+      {/* Seção Direita */}
+      <div className="right-section" style={{ backgroundImage: `url(${backgroundImage})` }}>
+        <img
+          src="/images/Magic-The-Gathering-Logo.png"
+          alt="Magic The Gathering Logo"
+          className="logo-overlay"
+        />
+      </div>
     </div>
   );
 };

@@ -28,10 +28,8 @@ const Login = () => {
       const response = await axios.post('http://localhost:3001/auth/login', { username, password });
       const { access_token } = response.data;
 
-      // Armazena o token no localStorage
       localStorage.setItem('authToken', access_token);
 
-      // Redireciona para o Dashboard
       navigate('/dashboard');
     } catch (error) {
       console.error('Erro no login:', error);

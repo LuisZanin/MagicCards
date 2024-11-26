@@ -1,23 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../services/axiosInstance';
+import axios from 'axios';
+
+interface Deck {
+  _id: string;
+  deckName: string;
+  Commander: string;
+  card: string[];
+}
 
 const Dashboard = () => {
-  const [decks, setDecks] = useState<any[]>([]);
+  const [decks, setDecks] = useState<Deck[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Verificar se o usuário está autenticado
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/');
       return;
     }
 
-    // Buscar decks
     const fetchDecks = async () => {
       try {
-        const response = await axiosInstance.get('/decks');
+        const response = await axios.get('http://localhost:3001/card/my-decks', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setDecks(response.data);
       } catch (error) {
         console.error('Erro ao buscar decks:', error);
@@ -27,7 +36,6 @@ const Dashboard = () => {
     fetchDecks();
   }, [navigate]);
 
-  // Função para navegar até a página de criação de um novo deck
   const handleCreateDeck = () => {
     navigate('/create-deck');
   };
@@ -46,15 +54,22 @@ const Dashboard = () => {
 
       <div className="deck-list">
         {decks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ul>
             {decks.map((deck) => (
-              <div key={deck.id} className="deck-card p-6 bg-gray-800 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold mb-4">{deck.name}</h2>
-                <p>Número de cartas: {deck.cards.length}</p>
-                {/* Botões ou funcionalidades adicionais para cada deck, como visualizar ou editar */}
-              </div>
+              <li key={deck._id} className="mb-4 p-4 bg-gray-800 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold mb-2">Nome do Deck: {deck.deckName}</h2>
+                <h3 className="text-lg font-medium mb-2">Comandante: {deck.Commander}</h3>
+                <p>Número de cartas: {deck.card ? deck.card.length : 0}</p>
+                {deck.card && deck.card.length > 0 && (
+                  <ul className="list-disc list-inside ml-4 mt-2">
+                    {deck.card.map((card, index) => (
+                      <li key={index} className="text-gray-300">{card}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
           <p className="text-gray-400">Nenhum deck encontrado. Crie um novo deck para começar!</p>
         )}

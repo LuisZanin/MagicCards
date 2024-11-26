@@ -1,45 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-interface Card {
-  id: string;
-  name: string;
-}
 
 const CreateDeck = () => {
   const [deckName, setDeckName] = useState('');
-  const [cards, setCards] = useState<Card[]>([]);
-  const [selectedCards, setSelectedCards] = useState<Card[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleCreateDeck = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/decks', {
-        name: deckName,
-        cards: selectedCards,
-      });
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await axios.post(
+        'http://localhost:3001/card/create',
+        {
+          deckName: deckName,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
       console.log('Deck criado com sucesso:', response.data);
+      navigate('/dashboard');
     } catch (error) {
       console.error('Erro ao criar o deck:', error);
     }
   };
-
-  const fetchCards = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/cards'); 
-      setCards(response.data);
-    } catch (error) {
-      console.error('Erro ao buscar cartas:', error);
-    }
-  };
-
-  const handleCardSelect = (card: Card) => {
-    setSelectedCards([...selectedCards, card]);
-  };
-
-  React.useEffect(() => {
-    fetchCards();
-  }, []);
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -57,25 +57,6 @@ const CreateDeck = () => {
             value={deckName}
             onChange={(e) => setDeckName(e.target.value)}
           />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-orange-500 mb-2">
-            Selecione Cartas
-          </label>
-          <div className="cards-container overflow-y-scroll max-h-80 border border-gray-600 p-4">
-            {cards.map((card) => (
-              <div key={card.id} className="card-item flex items-center mb-2">
-                <span className="text-gray-300 mr-4">{card.name}</span>
-                <button
-                  type="button"
-                  className="bg-orange-500 hover:bg-orange-600 text-white py-1 px-2 rounded transition duration-300"
-                  onClick={() => handleCardSelect(card)}
-                >
-                  Selecionar
-                </button>
-              </div>
-            ))}
-          </div>
         </div>
         <button
           type="submit"

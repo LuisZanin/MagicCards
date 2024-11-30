@@ -1,69 +1,73 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, Inject } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import axios, { AxiosResponse } from "axios";
 import { CreateCardDto } from "./dto/create-cards.dto";
-import { Cards, CardDocument } from "./cards.schema";  
+import { Cards, CardDocument } from "./cards.schema";
 import { ImportDeckDto } from "./dto/import-deck.dto";
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class CardService {
-  constructor(@InjectModel(Cards.name) private cardModel: Model<CardDocument>) {}
+  constructor(
+    @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
+    @InjectModel(Cards.name) private cardModel: Model<CardDocument>,
+  ) {}
 
-async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
-  const { Commander, card } = importDeckDto;
+  async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
+    const { Commander, card } = importDeckDto;
 
-  // 1. Verificar quantidade de cartas
-  if (card.length !== 99) {
-    throw new BadRequestException('O deck precisa ter exatamente 99 cartas além do comandante.');
-  }
-
-  // 2. Validar se o comandante é uma criatura lendária
-  const commanderInfo = await this.getCommanderInfo(Commander);
-  if (!commanderInfo || !commanderInfo.supertypes.includes('Legendary') || commanderInfo.types[0] !== 'Creature') {
-    throw new BadRequestException('O comandante precisa ser uma criatura lendária.');
-  }
-
-  // 3. Verificar se as cores das cartas batem com as cores do comandante
-  const commanderColors = commanderInfo.colors || [];
-  for (const cardName of card) {
-    const cardInfo = await this.getCardInfo(cardName);
-    if (!this.validateCardColors(cardInfo, commanderColors)) {
-      throw new BadRequestException(`A carta ${cardName} não é compatível com as cores do comandante.`);
+    // 1. Verificar quantidade de cartas
+    if (card.length !== 99) {
+      throw new BadRequestException('O deck precisa ter exatamente 99 cartas além do comandante.');
     }
+
+    // 2. Validar se o comandante é uma criatura lendária
+    const commanderInfo = await this.getCommanderInfo(Commander);
+    if (!commanderInfo || !commanderInfo.supertypes.includes('Legendary') || commanderInfo.types[0] !== 'Creature') {
+      throw new BadRequestException('O comandante precisa ser uma criatura lendária.');
+    }
+
+    // 3. Verificar se as cores das cartas batem com as cores do comandante
+    const commanderColors = commanderInfo.colors || [];
+    for (const cardName of card) {
+      const cardInfo = await this.getCardInfo(cardName);
+      if (!this.validateCardColors(cardInfo, commanderColors)) {
+        throw new BadRequestException(`A carta ${cardName} não é compatível com as cores do comandante.`);
+      }
+    }
+
+    // 4. Verificar se o deck tem cartas duplicadas
+    const cardSet = new Set(card);
+    if (cardSet.size !== card.length) {
+      throw new BadRequestException('O deck contém cartas duplicadas, o que não é permitido exceto para terrenos básicos.');
+    }
+
+    // 5. Salvar o deck no banco de dados
+    const newDeck = new this.cardModel({
+      Commander: Commander,
+      card: card,
+    });
+    await newDeck.save();
+
+    return 'Deck importado e validado com sucesso!';
   }
 
-  // 4. Verificar se o deck tem cartas duplicadas
-  const cardSet = new Set(card);
-  if (cardSet.size !== card.length) {
-    throw new BadRequestException('O deck contém cartas duplicadas, o que não é permitido exceto para terrenos básicos.');
-  }
-
-  // 5. Salvar o deck no banco de dados
-  const newDeck = new this.cardModel({
-    Commander: Commander,
-    card: card,
-  });
-  await newDeck.save();
-
-  return 'Deck importado e validado com sucesso!';
-}
-
-// Função para obter as informações de uma carta por nome
+  // Função para obter as informações de uma carta por nome
   private async getCardInfo(name: string): Promise<any> {
     const response: AxiosResponse = await axios.get(
-    `https://api.magicthegathering.io/v1/cards?name=${encodeURIComponent(name)}`
-);
-  return response.data.cards[0];
-}
+      `https://api.magicthegathering.io/v1/cards?name=${encodeURIComponent(name)}`
+    );
+    return response.data.cards[0];
+  }
 
-// Função para obter as informações detalhadas de um comandante por nome
+  // Função para obter as informações detalhadas de um comandante por nome
   private async getCommanderInfo(name: string): Promise<any> {
     const response: AxiosResponse = await axios.get(
-    `https://api.magicthegathering.io/v1/cards?name=${encodeURIComponent(name)}`
-);
-  return response.data.cards[0]; // Retornar a primeira carta correspondente
-}
+      `https://api.magicthegathering.io/v1/cards?name=${encodeURIComponent(name)}`
+    );
+    return response.data.cards[0]; // Retornar a primeira carta correspondente
+  }
 
   // Verificar se há duplicatas no deck (exceto terrenos básicos)
   private validateNoDuplicates(cardNames: string[]): boolean {
@@ -76,8 +80,6 @@ async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
     if (!card.colors) return true; // Cartas incolores são sempre válidas
     return card.colors.every((color: string) => commanderColors.includes(color));
   }
-
-
 
   // Função para buscar os decks do jogador logado
   async findDecksByPlayer(playerId: string): Promise<CardDocument[]> {
@@ -95,7 +97,9 @@ async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
       Commander: commanderName,
       card: cardNames,
     });
-    await newDeck.save();  
+    await newDeck.save();
+
+    this.client.emit('deck_created', newDeck);
 
     return {
       deckName: deckName,
@@ -127,7 +131,7 @@ async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
       `https://api.magicthegathering.io/v1/cards?colors=${colorQuery}&supertypes!=legendary`,
     );
     const nonLegendaryCards = response.data.cards;
-    
+
     return this.getRandomizedCards(nonLegendaryCards, 99);
   }
 
@@ -137,30 +141,30 @@ async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
 
   private async getRandomizedCards(cards: any[], count: number): Promise<any[]> {
     if (cards.length < count) {
-        throw new Error("Not enough unique cards available to fulfill the request");
+      throw new Error("Not enough unique cards available to fulfill the request");
     }
 
     const uniqueCards = new Set();
     const shuffledCards = this.shuffleArray(cards);
 
     for (const card of shuffledCards) {
-        if (uniqueCards.size >= count) {
-            break;
-        }
-        const cardName = this.getCardName(card);
-        if (!uniqueCards.has(cardName)) {
-            uniqueCards.add(cardName);
-        }
+      if (uniqueCards.size >= count) {
+        break;
+      }
+      const cardName = this.getCardName(card);
+      if (!uniqueCards.has(cardName)) {
+        uniqueCards.add(cardName);
+      }
     }
 
     return Array.from(uniqueCards).map(name => cards.find(card => this.getCardName(card) === name));
-}
+  }
 
-private shuffleArray(array: any[]): any[] {
+  private shuffleArray(array: any[]): any[] {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-}
+  }
 }

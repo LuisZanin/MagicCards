@@ -16,17 +16,20 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) {
+      console.error('Token não encontrado no localStorage. Redirecionando para a página de login.');
       navigate('/');
       return;
     }
 
     const fetchDecks = async () => {
       try {
+        console.log('Tentando buscar decks...');
         const response = await axios.get('http://localhost:3000/card/my-decks', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log('Resposta da API:', response.data);
         setDecks(response.data);
       } catch (error) {
         console.error('Erro ao buscar decks:', error);

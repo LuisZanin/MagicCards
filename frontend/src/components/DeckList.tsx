@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import DeckCard from './DeckCard';
-//mport rabbitMQService from '../services/rabbitmq.service';
+import rabbitMQService from '../services/rabbitmq.service';
 
 const DeckList = () => {
   const [decks, setDecks] = useState<any[]>([]);
@@ -18,15 +18,16 @@ const DeckList = () => {
 
     fetchDecks();
 
-//    rabbitMQService.connect();
- //   rabbitMQService.on('deck_created', (newDeck) => {
- //     setDecks((prevDecks) => [...prevDecks, newDeck]);
-//    });
+    rabbitMQService.connect();
+    rabbitMQService.on('deck_created', (newDeck) => {
+      setDecks((prevDecks) => [...prevDecks, newDeck]);
+    });
 
     return () => {
-  //    rabbitMQService.disconnect();
+      rabbitMQService.disconnect();
     };
   }, []);
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

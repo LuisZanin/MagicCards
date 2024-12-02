@@ -3,8 +3,9 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import axios, { AxiosResponse } from "axios";
 import { CreateCardDto } from "./dto/create-cards.dto";
-import { Cards, CardDocument } from "./cards.schema";  
+import { Cards, CardDocument } from "./cards.schema";
 import { ImportDeckDto } from "./dto/import-deck.dto";
+import * as amqp from 'amqplib';
 
 @Injectable()
 export class CardService {
@@ -95,13 +96,29 @@ async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
       Commander: commanderName,
       card: cardNames,
     });
-    await newDeck.save();  
+    await newDeck.save();
+
+    await this.publishDeckCreatedEvent(newDeck);
 
     return {
       deckName: deckName,
       Commander: commanderName,
       card: cardNames,
     };
+  }
+
+  private async publishDeckCreatedEvent(deck: any) {
+    const connection = await amqp.connect('amqp://localhost');
+    const channel = await connection.createChannel();
+    const exchange = 'deck_created_exchange';
+
+    await channel.assertExchange(exchange, 'fanout', { durable: false });
+    channel.publish(exchange, '', Buffer.from(JSON.stringify(deck)));
+
+    console.log('Evento de criação de deck publicado no RabbitMQ');
+
+    await channel.close();
+    await connection.close();
   }
 
   async viewAllDecks(): Promise<CreateCardDto[]> {
@@ -127,7 +144,7 @@ async importDeck(importDeckDto: ImportDeckDto): Promise<string> {
       `https://api.magicthegathering.io/v1/cards?colors=${colorQuery}&supertypes!=legendary`,
     );
     const nonLegendaryCards = response.data.cards;
-    
+
     return this.getRandomizedCards(nonLegendaryCards, 99);
   }
 

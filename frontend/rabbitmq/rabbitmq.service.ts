@@ -13,7 +13,7 @@ class RabbitMQService extends EventEmitter {
     const socket = new SockJS('http://localhost:15674/stomp');
     this.stompClient = Stomp.over(socket);
     this.stompClient.connect('guest', 'guest', () => {
-      this.stompClient?.subscribe('/exchange/messages_queue/deck_created', (message) => {
+      this.stompClient?.subscribe('/exchange/deck_created_exchange', (message) => {
         const deck = JSON.parse(message.body);
         this.emit('deck_created', deck);
       });
@@ -22,7 +22,7 @@ class RabbitMQService extends EventEmitter {
 
   disconnect() {
     this.stompClient?.disconnect(() => {
-      console.log('Disconnected from RabbitMQ');
+      console.log('Desconectado do RabbitMQ');
     });
   }
 }
